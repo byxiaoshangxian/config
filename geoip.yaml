@@ -1,0 +1,141 @@
+port: 7890
+socks-port: 7891
+allow-lan: true
+mode: Rule
+log-level: info
+tcp-concurrent: true
+external-controller: :9090
+geodata-mode: true
+global-client-fingerprint: chrome
+profile:
+  store-selected: true
+sniffer:
+  enable: true
+  force-dns-mapping: true
+  parse-pure-ip: true
+  force-domain:
+    - "+.netflix.com"
+    - "+.nflxvideo.net"
+    - "+.amazonaws.com"
+    - "+.media.dssott.com"
+  skip-domain:
+    - "+.apple.com"
+    - Mijia Cloud
+    - dlg.io.mi.com
+  sniff:
+    TLS:
+    HTTP:
+      ports:
+        - 80
+        - 8080-8880
+      override-destination: true
+dns:
+  enable: true
+  prefer-h3: true
+  ipv6: false
+  enhanced-mode: redir-host
+  nameserver:
+    - https://doh.apad.pro/dns-query
+    - https://dns.cooluc.com/dns-query
+  proxy-server-nameserver:
+    - 223.5.5.5
+experimental:
+  ignore-resolve-fail: true
+unified-delay: true
+
+proxy-groups:
+  - name: 🚀 手动切换
+    type: select
+    proxies:
+      - 免费节点
+      - 香港
+      - 台湾
+      - 日本
+      - 美国
+      - 新加坡
+      - 其它地区
+      - 🐟 漏网之鱼
+  - { name: 全部节点, type: select, include-all-providers: true }
+  - name: 免费节点
+    type: select
+    use:
+      - free
+  - {
+      name: 香港,
+      type: select,
+      include-all-providers: true,
+      filter: "(?i)港|hk|hongkong|hong kong",
+    }
+  - {
+      name: 台湾,
+      type: select,
+      include-all-providers: true,
+      filter: "(?i)台|tw|taiwan",
+    }
+  - {
+      name: 日本,
+      type: select,
+      include-all-providers: true,
+      filter: "(?i)日|jp|japan",
+    }
+  - {
+      name: 美国,
+      type: select,
+      include-all-providers: true,
+      filter: "(?i)美|us|unitedstates|united states",
+    }
+  - {
+      name: 新加坡,
+      type: select,
+      include-all-providers: true,
+      filter: "(?i)(新|sg|singapore)",
+    }
+  - {
+      name: 其它地区,
+      type: select,
+      include-all-providers: true,
+      filter: "(?i)^(?!.*(?:🇭🇰|🇯🇵|🇺🇸|🇸🇬|🇨🇳|港|hk|hongkong|台|tw|taiwan|日|jp|japan|新|sg|singapore|美|us|unitedstates)).*",
+    }
+  - name: 🐟 漏网之鱼
+    type: select
+    proxies:
+      - DIRECT
+
+proxy-providers:
+  free:
+    type: http
+    url: "https://dy.byxiao.top/v2ray"
+    path: ./proxy_providers/free.yaml
+    interval: 3600
+    health-check:
+      enable: true
+      url: https://www.gstatic.com/generate_204
+      interval: 300
+      timeout: 5000
+      expected-status: 204
+    override:
+      udp: true
+
+rules:
+  - GEOSITE,microsoft-cn,🐟 漏网之鱼
+  - GEOSITE,apple-cn,🐟 漏网之鱼
+  - GEOSITE,google-cn,🐟 漏网之鱼
+  - GEOSITE,games-cn,🐟 漏网之鱼
+  - GEOSITE,tiktok,🚀 手动切换
+  - GEOSITE,youtube,🚀 手动切换
+  - GEOSITE,netflix,🚀 手动切换
+  - GEOSITE,disney,🚀 手动切换
+  - GEOSITE,ai,🚀 手动切换
+  - GEOSITE,proxy,🚀 手动切换
+  - GEOSITE,cn,🐟 漏网之鱼
+
+  - GEOIP,cloudflare,🚀 手动切换
+  - GEOIP,cloudfront,🚀 手动切换
+  - GEOIP,facebook,🚀 手动切换
+  - GEOIP,fastly,🚀 手动切换
+  - GEOIP,google,🚀 手动切换
+  - GEOIP,netflix,🚀 手动切换
+  - GEOIP,telegram,🚀 手动切换
+  - GEOIP,twitter,🚀 手动切换
+  - GEOIP,cn,🐟 漏网之鱼
+  - MATCH,🐟 漏网之鱼
