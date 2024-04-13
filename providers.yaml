@@ -5,42 +5,54 @@ mode: Rule
 log-level: info
 tcp-concurrent: true
 external-controller: :9090
+find-process-mode: strict
 global-client-fingerprint: chrome
 profile:
   store-selected: true
+  store-fake-ip: true
 sniffer:
   enable: true
-  force-dns-mapping: true
-  parse-pure-ip: true
-  force-domain:
-    - "+.netflix.com"
-    - "+.nflxvideo.net"
-    - "+.amazonaws.com"
-    - "+.media.dssott.com"
-  skip-domain:
-    - "+.apple.com"
-    - Mijia Cloud
-    - dlg.io.mi.com
   sniff:
     TLS:
+      ports: [443, 8443]
     HTTP:
-      ports:
-        - 80
-        - 8080-8880
+      ports: [80, 8080-8880]
       override-destination: true
+tun:
+  enable: false
+  stack: system
+  dns-hijack:
+    - "any:53"
+    - "tcp://any:53"
+  auto-route: true
+  auto-detect-interface: true
 dns:
   enable: true
-  prefer-h3: true
-  ipv6: false
-  enhanced-mode: redir-host
-  nameserver:
-    - https://doh.apad.pro/dns-query
-    - https://dns.cooluc.com/dns-query
-  proxy-server-nameserver:
+  listen: :1053
+  ipv6: true
+  enhanced-mode: fake-ip
+  fake-ip-range: 28.0.0.1/8
+  fake-ip-filter:
+    - '*'
+    - '+.lan'
+    - '+.local'
+  default-nameserver:
     - 223.5.5.5
-experimental:
-  ignore-resolve-fail: true
-unified-delay: true
+    - 119.29.29.29
+    - 114.114.114.114
+    - '[2402:4e00::]'
+    - '[2400:3200::1]'
+  nameserver:
+    - 'tls://8.8.4.4#dns'
+    - 'tls://1.0.0.1#dns'
+    - 'tls://[2001:4860:4860::8844]#dns'
+    - 'tls://[2606:4700:4700::1001]#dns'
+  proxy-server-nameserver:
+    - https://doh.pub/dns-query
+  nameserver-policy:
+    "geosite:cn,private":
+      - https://doh.pub/dns-query
+      - https://dns.alidns.com/dns-query
 
 proxy-groups:
   - name: PROXY
