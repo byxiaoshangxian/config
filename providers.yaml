@@ -1,31 +1,71 @@
+# 健康检测
+my-check: &my-check
+  interval: 3600
+  health-check:
+    enable: true
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    timeout: 5000
+
+# 定义自动测速节点
+auto-test: &auto-test
+  type: url-test
+  url: http://www.gstatic.com/generate_204
+  interval: 1800
+
+# 在线订阅机场，可根据需要自行修改
+proxy-providers:
+  month:
+    type: http
+    url: "机场地址1"
+    path: ./proxy/month.yaml
+    override:
+      udp: true
+    <<: *my-check
+
+  year:
+    type: http
+    url: "机场地址2"
+    path: ./proxy/year.yaml
+    override:
+      udp: true
+    <<: *my-check
+
 port: 7890
 socks-port: 7891
+mixed-port: 2333
 allow-lan: true
-mode: Rule
+mode: rule
 log-level: info
 tcp-concurrent: true
-external-controller: :9090
-find-process-mode: strict
+# external-controller: :9090
+# external-ui: "./ui"
 global-client-fingerprint: chrome
+unified-delay: true
 profile:
   store-selected: true
-  store-fake-ip: true
 sniffer:
   enable: true
   sniff:
-    TLS:
-      ports: [443, 8443]
     HTTP:
       ports: [80, 8080-8880]
       override-destination: true
+    TLS:
+      ports: [443, 8443]
+    QUIC:
+      ports: [443, 8443]
+  skip-domain:
+    - "Mijia Cloud"
+    - "+.push.apple.com"
+
 tun:
   enable: false
-  stack: system
+  stack: mixed
   dns-hijack:
     - "any:53"
-    - "tcp://any:53"
   auto-route: true
   auto-detect-interface: true
+
 dns:
   enable: true
   listen: :1053
@@ -33,49 +73,177 @@ dns:
   enhanced-mode: fake-ip
   fake-ip-range: 28.0.0.1/8
   fake-ip-filter:
-    - '*'
-    - '+.lan'
-    - '+.local'
+    - "*"
+    - "+.lan"
+    - "+.local"
   default-nameserver:
     - 223.5.5.5
     - 119.29.29.29
     - 114.114.114.114
-    - '[2402:4e00::]'
-    - '[2400:3200::1]'
+    - 122.112.208.1
+    - "[2400:3200::1]"
+    - "[2402:4e00::]"
   nameserver:
-    - 'tls://8.8.4.4#dns'
-    - 'tls://1.0.0.1#dns'
-    - 'tls://[2001:4860:4860::8844]#dns'
-    - 'tls://[2606:4700:4700::1001]#dns'
+    - "tls://8.8.4.4#dns"
+    - "tls://1.0.0.1#dns"
+    - "tls://[2001:4860:4860::8844]#dns"
+    - "tls://[2606:4700:4700::1001]#dns"
   proxy-server-nameserver:
+    - https://223.5.5.5/dns-query
     - https://doh.pub/dns-query
   nameserver-policy:
     "geosite:cn,private":
-      - https://doh.pub/dns-query
       - https://dns.alidns.com/dns-query
+      - https://doh.pub/dns-query
+
+# dns:
+#   enabled: true
+#   nameserver:
+#     - 119.29.29.29
+#     - 223.5.5.5
+#   fallback:
+#     - 8.8.8.8
+#     - 8.8.4.4
+#     - tls://1.0.0.1:853
+#     - tls://dns.google:853
 
 proxy-groups:
-  - name: PROXY
+  - name: 🚀 手动切换
+    type: select
+    proxies:
+      [
+        ♻️ 自动选择,
+        🔀负载均衡(散列),
+        🔁负载均衡(轮询),
+        月付机场,
+        不限时机场,
+        🇭🇰 香港节点,
+        🇹🇼 台湾节点,
+        🇸🇬 新加坡节点,
+        🇺🇲 美国节点,
+        🇯🇵 日本节点,
+        🇰🇷 韩国节点,
+        🏰 其它地区,
+        🔯 故障转移,
+        🎯 全球直连,
+      ]
+  - name: ♻️ 自动选择
+    <<: *auto-test
+    proxies:
+      [
+        🇭🇰 香港节点,
+        🇹🇼 台湾节点,
+        🇸🇬 新加坡节点,
+        🇺🇲 美国节点,
+        🇯🇵 日本节点,
+        🇰🇷 韩国节点,
+        🏰 其它地区,
+      ]
+  - name: 月付机场
+    type: select
+    use:
+      - month
+
+  - name: 不限时机场
+    type: select
+    use:
+      - year
+
+  - name: 🔀负载均衡(散列)
+    type: load-balance
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
+    strategy: consistent-hashing
+    lazy: true
+    include-all-providers: true
+    filter: "🇭🇰|港|HK|hk|Hong Kong|HongKong|hongkong|HKG"
+
+  - name: 🔁负载均衡(轮询)
+    type: load-balance
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
+    strategy: round-robin
+    lazy: true
+    include-all-providers: true
+    filter: "🇭🇰|港|HK|hk|Hong Kong|HongKong|hongkong|HKG"
+
+  - name: 💬 OpenAi
+    type: select
+    proxies:
+      [
+        ♻️ 自动选择,
+        🇭🇰 香港节点,
+        🇹🇼 台湾节点,
+        🇸🇬 新加坡节点,
+        🇺🇲 美国节点,
+        🇯🇵 日本节点,
+        🇰🇷 韩国节点,
+        🏰 其它地区,
+        🔯 故障转移,
+        🎯 全球直连,
+      ]
+
+  - name: 📺 国外媒体
+    type: select
+    proxies:
+      [
+        ♻️ 自动选择,
+        🇭🇰 香港节点,
+        🇹🇼 台湾节点,
+        🇸🇬 新加坡节点,
+        🇺🇲 美国节点,
+        🇯🇵 日本节点,
+        🇰🇷 韩国节点,
+        🏰 其它地区,
+        🔯 故障转移,
+        🎯 全球直连,
+      ]
+
+  - name: 🔯 故障转移
+    type: fallback
+    url: "https://www.gstatic.com/generate_204"
+    interval: 300
+    include-all-providers: true
+
+  - name: 🇭🇰 香港节点
+    type: select
+    include-all-providers: true
+    filter: "🇭🇰|港|HK|hk|Hong Kong|HongKong|hongkong|HKG"
+
+  - name: 🇹🇼 台湾节点
+    type: select
+    include-all-providers: true
+    filter: "🇹🇼|台湾|台北|TW|🇹🇼|Taiwan|新北|彰化"
+
+  - name: 🇯🇵 日本节点
+    type: select
+    include-all-providers: true
+    filter: "🇯🇵|日本|川日|东京|大阪|泉日|埼玉|沪日|深日|[^-]日|JP|Japan"
+
+  - name: 🇸🇬 新加坡节点
+    type: select
+    include-all-providers: true
+    filter: "新加坡|🇸🇬|SG|Singapore|坡|狮城"
+
+  - name: 🇰🇷 韩国节点
+    type: select
+    include-all-providers: true
+    filter: "韩国|韩|KR|🇰🇷|Korea|KOR|首尔|韓"
+
+  - name: 🇺🇲 美国节点
+    type: select
+    include-all-providers: true
+    filter: "美|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|US|United States|ATL|BUF|DFW|EWR|IAD"
+
+  - name: 🏰 其它地区
+    type: select
+    include-all-providers: true
+    filter: "(?i)^(?!.*(?:🇭🇰|🇯🇵|🇺🇸|🇸🇬|🇨🇳|港|hk|hongkong|台|tw|taiwan|日|jp|japan|新|sg|singapore|美|us|unitedstates)).*"
+
+  - name: 🎯 全球直连
     type: select
     proxies:
       - DIRECT
-    use:
-      - provider1
-
-proxy-providers:
-  provider1:
-    type: http
-    url: "https://dy.byxiao.top/v2ray"
-    path: ./proxy_providers/provider1.yaml
-    interval: 3600
-    health-check:
-      enable: true
-      url: https://www.gstatic.com/generate_204
-      interval: 300
-      timeout: 5000
-      expected-status: 204
-    override:
-      udp: true
 
 rule-providers:
   reject:
@@ -169,20 +337,52 @@ rule-providers:
     path: ./ruleset/applications.yaml
     interval: 86400
 
+  openai:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/OpenAi.list"
+    path: ./ruleset/applications.yaml
+    interval: 86400
+
+  othervideo:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ProxyMedia.list"
+    path: ./ruleset/applications.yaml
+    interval: 86400
+
+  bilibili:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/BilibiliHMT.list"
+    path: ./ruleset/applications.yaml
+    interval: 86400
+
+  netflix:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Netflix.list"
+    path: ./ruleset/applications.yaml
+    interval: 86400
+
 rules:
-  - RULE-SET,applications,DIRECT
-  - DOMAIN,clash.razord.top,DIRECT
-  - DOMAIN,yacd.haishan.me,DIRECT
-  - RULE-SET,private,DIRECT
-  - RULE-SET,reject,REJECT
-  - RULE-SET,icloud,DIRECT
-  - RULE-SET,apple,DIRECT
-  - RULE-SET,google,PROXY
-  - RULE-SET,proxy,PROXY
-  - RULE-SET,direct,DIRECT
-  - RULE-SET,lancidr,DIRECT
-  - RULE-SET,cncidr,DIRECT
-  - RULE-SET,telegramcidr,PROXY
-  - GEOIP,LAN,DIRECT
-  - GEOIP,CN,DIRECT
-  - MATCH,PROXY
+  - RULE-SET,applications,🎯 全球直连
+  - DOMAIN,clash.razord.top,🎯 全球直连
+  - DOMAIN,yacd.haishan.me,🎯 全球直连
+  - RULE-SET,private,🎯 全球直连
+  - RULE-SET,othervideo,📺 国外媒体
+  - RULE-SET,netflix,📺 国外媒体
+  - RULE-SET,bilibili,📺 国外媒体
+  - RULE-SET,openai,💬 OpenAi
+  # - RULE-SET,reject,REJECT
+  - RULE-SET,icloud,🎯 全球直连
+  - RULE-SET,apple,🎯 全球直连
+  - RULE-SET,google,🚀 手动切换
+  - RULE-SET,proxy,🚀 手动切换
+  - RULE-SET,direct,🎯 全球直连
+  - RULE-SET,lancidr,🎯 全球直连
+  - RULE-SET,cncidr,🎯 全球直连
+  - RULE-SET,telegramcidr,🚀 手动切换
+  - GEOIP,LAN,🎯 全球直连
+  - GEOIP,CN,🎯 全球直连
+  - MATCH,🚀 手动切换
