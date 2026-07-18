@@ -111,6 +111,11 @@
     },
     {
       "type": "selector",
+      "tag": "Customize",
+      "outbounds": ["Default", "Auto", "Direct-Out"]
+    },
+    {
+      "type": "selector",
       "tag": "PayPal",
       "outbounds": ["Default", "Auto"]
     },
