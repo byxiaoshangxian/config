@@ -1,388 +1,80 @@
-# 健康检测
-my-check: &my-check
-  interval: 3600
-  health-check:
-    enable: true
-    url: https://www.gstatic.com/generate_204
-    interval: 300
-    timeout: 5000
-
-# 定义自动测速节点
-auto-test: &auto-test
-  type: url-test
-  url: http://www.gstatic.com/generate_204
-  interval: 1800
-
-# 在线订阅机场，可根据需要自行修改
-proxy-providers:
-  month:
-    type: http
-    url: "机场地址1"
-    path: ./proxy/month.yaml
-    override:
-      udp: true
-    <<: *my-check
-
-  year:
-    type: http
-    url: "机场地址2"
-    path: ./proxy/year.yaml
-    override:
-      udp: true
-    <<: *my-check
-
-port: 7890
-socks-port: 7891
-mixed-port: 2333
+mixed-port: 7890
 allow-lan: true
+bind-address: '*'
 mode: rule
-log-level: info
+log-level: error
+ipv6: true
+external-controller: 127.0.0.1:9090
+external-ui: ./UI
+external-ui-url: "https://ghfast.top/https://github.com/Zephyruso/zashboard/archive/refs/heads/gh-pages.zip"
+keep-alive-interval: 15
+keep-alive-idle: 15
 tcp-concurrent: true
-# external-controller: :9090
-# external-ui: "./ui"
-global-client-fingerprint: chrome
 unified-delay: true
-profile:
-  store-selected: true
-sniffer:
-  enable: true
-  sniff:
-    HTTP:
-      ports: [80, 8080-8880]
-      override-destination: true
-    TLS:
-      ports: [443, 8443]
-    QUIC:
-      ports: [443, 8443]
-  skip-domain:
-    - "Mijia Cloud"
-    - "+.push.apple.com"
-
-tun:
-  enable: false
-  stack: mixed
-  dns-hijack:
-    - "any:53"
-  auto-route: true
-  auto-detect-interface: true
-
-dns:
-  enable: true
-  listen: :1053
-  ipv6: true
-  enhanced-mode: fake-ip
-  fake-ip-range: 28.0.0.1/8
-  fake-ip-filter:
-    - "*"
-    - "+.lan"
-    - "+.local"
-  default-nameserver:
-    - 223.5.5.5
-    - 119.29.29.29
-    - 114.114.114.114
-    - 122.112.208.1
-    - "[2400:3200::1]"
-    - "[2402:4e00::]"
-  nameserver:
-    - "tls://8.8.4.4#dns"
-    - "tls://1.0.0.1#dns"
-    - "tls://[2001:4860:4860::8844]#dns"
-    - "tls://[2606:4700:4700::1001]#dns"
-  proxy-server-nameserver:
-    - https://223.5.5.5/dns-query
-    - https://doh.pub/dns-query
-  nameserver-policy:
-    "geosite:cn,private":
-      - https://dns.alidns.com/dns-query
-      - https://doh.pub/dns-query
-
-# dns:
-#   enabled: true
-#   nameserver:
-#     - 119.29.29.29
-#     - 223.5.5.5
-#   fallback:
-#     - 8.8.8.8
-#     - 8.8.4.4
-#     - tls://1.0.0.1:853
-#     - tls://dns.google:853
-
+geo-auto-update: true
+geo-update-interval: 24
+geox-url: {geoip: "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat", geosite: "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat", mmdb: "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country.mmdb", asn: "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/GeoLite2-ASN.mmdb"}
+profile: {store-selected: true, store-fake-ip: true}
+# enable: false=关闭DNS，true=开启（开启TUN模式时建议启用）。enhanced-mode: fake-ip=虚拟IP模式(推荐), redir-host=真实IP模式。nameserver: 上游DNS服务器（可根据地区修改为更快的DNS）
+dns: {enable: false, ipv6: true, enhanced-mode: fake-ip, fake-ip-range: 198.18.0.1/16, fake-ip-filter: ["*.lan","*","*.local","geosite:private","geosite:cn"], nameserver: [system, 223.5.5.5, 119.29.29.29]}
+# enable: false=关闭TUN模式，true=开启（开启后为全局系统代理，需管理员权限）
+tun: {enable: false, stack: system, dns-hijack: ["any:53", "tcp://any:53"], auto-route: true, auto-redirect: true, auto-detect-interface: true}
+# 这里可以根据需要修改策略组名称、添加或删除策略组
 proxy-groups:
-  - name: 🚀 手动切换
-    type: select
-    proxies:
-      [
-        ♻️ 自动选择,
-        🔀负载均衡(散列),
-        🔁负载均衡(轮询),
-        月付机场,
-        不限时机场,
-        🇭🇰 香港节点,
-        🇹🇼 台湾节点,
-        🇸🇬 新加坡节点,
-        🇺🇲 美国节点,
-        🇯🇵 日本节点,
-        🇰🇷 韩国节点,
-        🏰 其它地区,
-        🔯 故障转移,
-        🎯 全球直连,
-      ]
-  - name: ♻️ 自动选择
-    <<: *auto-test
-    proxies:
-      [
-        🇭🇰 香港节点,
-        🇹🇼 台湾节点,
-        🇸🇬 新加坡节点,
-        🇺🇲 美国节点,
-        🇯🇵 日本节点,
-        🇰🇷 韩国节点,
-        🏰 其它地区,
-      ]
-  - name: 月付机场
-    type: select
-    use:
-      - month
+  # PROXY: 主代理组（可自定义添加其他策略组到proxies列表中）
+  - {name: PROXY, type: select, proxies: [AUTO,DIRECT,AI-PROXY], include-all: true, max-failed-times: 1, interval: 600, timeout: 1000, lazy: false}
+  # AUTO: 自动选择最快节点（use中填写你使用的provider名称，或者用include-all）
+  - {name: AUTO, type: url-test, url: https://cp.cloudflare.com/generate_204, max-failed-times: 1, interval: 600, timeout: 1000, use: [Provider1,Provider2], lazy: false}
+  # AI-PROXY: AI服务专用代理（exclude-filter可过滤不想用的地区，如"HK|US|JP"）
+  - {name: AI-PROXY, type: select, url: https://cp.cloudflare.com/generate_204, max-failed-times: 1, interval: 600, timeout: 1000, use: [Provider1,Provider2], exclude-filter: "HK|香港|Hong Kong", lazy: false}
 
-  - name: 不限时机场
-    type: select
-    use:
-      - year
+# 需要将订阅链接填入url字段中，filter: 可填写正则表达式过滤节点，如"香港|HK|Taiwan|台湾"，additional-prefix: 可为节点名称添加前缀，如"[宝可梦|] "
+proxy-providers:
+  Provider1: {type: http, url: "", interval: 3600, timeout: 1000, path: ./profiles/Provider1, filter: "", health-check: {enable: true, interval: 600, url: "https://cp.cloudflare.com/generate_204"}, override: {skip-cert-verify: true, additional-prefix: ""}}
+  Provider2: {type: http, url: "", interval: 3600, timeout: 1000, path: ./profiles/Provider2, filter: "", health-check: {enable: true, interval: 600, url: "https://cp.cloudflare.com/generate_204"}, override: {skip-cert-verify: true, additional-prefix: ""}}
+  # 如需添加更多订阅源，可复制上面的格式继续添加
+ 
 
-  - name: 🔀负载均衡(散列)
-    type: load-balance
-    url: "http://www.gstatic.com/generate_204"
-    interval: 300
-    strategy: consistent-hashing
-    lazy: true
-    include-all-providers: true
-    filter: "🇭🇰|港|HK|hk|Hong Kong|HongKong|hongkong|HKG"
-
-  - name: 🔁负载均衡(轮询)
-    type: load-balance
-    url: "http://www.gstatic.com/generate_204"
-    interval: 300
-    strategy: round-robin
-    lazy: true
-    include-all-providers: true
-    filter: "🇭🇰|港|HK|hk|Hong Kong|HongKong|hongkong|HKG"
-
-  - name: 💬 OpenAi
-    type: select
-    proxies:
-      [
-        ♻️ 自动选择,
-        🇭🇰 香港节点,
-        🇹🇼 台湾节点,
-        🇸🇬 新加坡节点,
-        🇺🇲 美国节点,
-        🇯🇵 日本节点,
-        🇰🇷 韩国节点,
-        🏰 其它地区,
-        🔯 故障转移,
-        🎯 全球直连,
-      ]
-
-  - name: 📺 国外媒体
-    type: select
-    proxies:
-      [
-        ♻️ 自动选择,
-        🇭🇰 香港节点,
-        🇹🇼 台湾节点,
-        🇸🇬 新加坡节点,
-        🇺🇲 美国节点,
-        🇯🇵 日本节点,
-        🇰🇷 韩国节点,
-        🏰 其它地区,
-        🔯 故障转移,
-        🎯 全球直连,
-      ]
-
-  - name: 🔯 故障转移
-    type: fallback
-    url: "https://www.gstatic.com/generate_204"
-    interval: 300
-    include-all-providers: true
-
-  - name: 🇭🇰 香港节点
-    type: select
-    include-all-providers: true
-    filter: "🇭🇰|港|HK|hk|Hong Kong|HongKong|hongkong|HKG"
-
-  - name: 🇹🇼 台湾节点
-    type: select
-    include-all-providers: true
-    filter: "🇹🇼|台湾|台北|TW|🇹🇼|Taiwan|新北|彰化"
-
-  - name: 🇯🇵 日本节点
-    type: select
-    include-all-providers: true
-    filter: "🇯🇵|日本|川日|东京|大阪|泉日|埼玉|沪日|深日|[^-]日|JP|Japan"
-
-  - name: 🇸🇬 新加坡节点
-    type: select
-    include-all-providers: true
-    filter: "新加坡|🇸🇬|SG|Singapore|坡|狮城"
-
-  - name: 🇰🇷 韩国节点
-    type: select
-    include-all-providers: true
-    filter: "韩国|韩|KR|🇰🇷|Korea|KOR|首尔|韓"
-
-  - name: 🇺🇲 美国节点
-    type: select
-    include-all-providers: true
-    filter: "美|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|US|United States|ATL|BUF|DFW|EWR|IAD"
-
-  - name: 🏰 其它地区
-    type: select
-    include-all-providers: true
-    filter: "(?i)^(?!.*(?:🇭🇰|🇯🇵|🇺🇸|🇸🇬|🇨🇳|港|hk|hongkong|台|tw|taiwan|日|jp|japan|新|sg|singapore|美|us|unitedstates)).*"
-
-  - name: 🎯 全球直连
-    type: select
-    proxies:
-      - DIRECT
-
-rule-providers:
-  reject:
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/reject.txt"
-    path: ./ruleset/reject.yaml
-    interval: 86400
-
-  icloud:
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/icloud.txt"
-    path: ./ruleset/icloud.yaml
-    interval: 86400
-
-  apple:
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/apple.txt"
-    path: ./ruleset/apple.yaml
-    interval: 86400
-
-  google:
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/google.txt"
-    path: ./ruleset/google.yaml
-    interval: 86400
-
-  proxy:
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/proxy.txt"
-    path: ./ruleset/proxy.yaml
-    interval: 86400
-
-  direct:
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/direct.txt"
-    path: ./ruleset/direct.yaml
-    interval: 86400
-
-  private:
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/private.txt"
-    path: ./ruleset/private.yaml
-    interval: 86400
-
-  gfw:
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/gfw.txt"
-    path: ./ruleset/gfw.yaml
-    interval: 86400
-
-  tld-not-cn:
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/tld-not-cn.txt"
-    path: ./ruleset/tld-not-cn.yaml
-    interval: 86400
-
-  telegramcidr:
-    type: http
-    behavior: ipcidr
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/telegramcidr.txt"
-    path: ./ruleset/telegramcidr.yaml
-    interval: 86400
-
-  cncidr:
-    type: http
-    behavior: ipcidr
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/cncidr.txt"
-    path: ./ruleset/cncidr.yaml
-    interval: 86400
-
-  lancidr:
-    type: http
-    behavior: ipcidr
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/lancidr.txt"
-    path: ./ruleset/lancidr.yaml
-    interval: 86400
-
-  applications:
-    type: http
-    behavior: classical
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/applications.txt"
-    path: ./ruleset/applications.yaml
-    interval: 86400
-
-  openai:
-    type: http
-    behavior: classical
-    url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/OpenAi.list"
-    path: ./ruleset/applications.yaml
-    interval: 86400
-
-  othervideo:
-    type: http
-    behavior: classical
-    url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ProxyMedia.list"
-    path: ./ruleset/applications.yaml
-    interval: 86400
-
-  bilibili:
-    type: http
-    behavior: classical
-    url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/BilibiliHMT.list"
-    path: ./ruleset/applications.yaml
-    interval: 86400
-
-  netflix:
-    type: http
-    behavior: classical
-    url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Netflix.list"
-    path: ./ruleset/applications.yaml
-    interval: 86400
-
+# 规则优先级从上到下，匹配到即停止
 rules:
-  - RULE-SET,applications,🎯 全球直连
-  - DOMAIN,clash.razord.top,🎯 全球直连
-  - DOMAIN,yacd.haishan.me,🎯 全球直连
-  - RULE-SET,private,🎯 全球直连
-  - RULE-SET,othervideo,📺 国外媒体
-  - RULE-SET,netflix,📺 国外媒体
-  - RULE-SET,bilibili,📺 国外媒体
-  - RULE-SET,openai,💬 OpenAi
-  # - RULE-SET,reject,REJECT
-  - RULE-SET,icloud,🎯 全球直连
-  - RULE-SET,apple,🎯 全球直连
-  - RULE-SET,google,🚀 手动切换
-  - RULE-SET,proxy,🚀 手动切换
-  - RULE-SET,direct,🎯 全球直连
-  - RULE-SET,lancidr,🎯 全球直连
-  - RULE-SET,cncidr,🎯 全球直连
-  - RULE-SET,telegramcidr,🚀 手动切换
-  - GEOIP,LAN,🎯 全球直连
-  - GEOIP,CN,🎯 全球直连
-  - MATCH,🚀 手动切换
+# ========== AI服务专用代理规则 ==========
+# AI-PROXY策略组：适用于ChatGPT、Claude等AI服务（可根据需要添加或删除）
+ - DOMAIN-SUFFIX,ping0.cc,AI-PROXY
+ - DOMAIN-SUFFIX,ipdata.co,AI-PROXY
+ - DOMAIN-SUFFIX,pingip.cn,AI-PROXY
+# PROXY策略组：需要代理访问的域名（根据个人需求自由添加）
+ - DOMAIN-SUFFIX,live.com,PROXY
+ - DOMAIN-SUFFIX,teracloud.jp,PROXY
+# ========== 直连规则 ==========
+# DIRECT策略组：不走代理直接连接（根据个人需求自由添加）
+ - DOMAIN-SUFFIX,msftconnecttest.com,DIRECT
+ - DOMAIN-SUFFIX,msftncsi.com,DIRECT
+ - DOMAIN-SUFFIX,steamserver.net,DIRECT
+ - DOMAIN-SUFFIX,steamcontent.com,DIRECT
+ - DOMAIN-SUFFIX,linux.do,DIRECT
+ - DOMAIN,stun.l.google.com,DIRECT
+ - DOMAIN-SUFFIX,edu.cn,DIRECT
+ - DOMAIN-SUFFIX,v6.navy,DIRECT
+ - DOMAIN-SUFFIX,dynv6.com,DIRECT
+# ========== 基于GeoSite的智能分流规则 ==========
+# 以下为固定规则，一般无需修改
+# 如需调整某个服务的策略，可修改后面的策略组名称
+ - GEOSITE,cursor,AI-PROXY
+ - GEOSITE,telegram,PROXY
+ - GEOSITE,google,AI-PROXY
+ - GEOSITE,steam@cn,DIRECT
+ - GEOSITE,category-games@cn,DIRECT
+ - GEOSITE,category-ai-!cn,AI-PROXY
+ - GEOSITE,category-ai-cn,DIRECT
+ - GEOSITE,onedrive,DIRECT
+ - GEOSITE,private,DIRECT
+ - GEOSITE,category-scholar-!cn,PROXY
+ - GEOSITE,microsoft@cn,DIRECT
+ - GEOSITE,apple-cn,DIRECT
+ - GEOSITE,geolocation-!cn,PROXY
+ - GEOSITE,CN,DIRECT
+ - GEOIP,private,DIRECT,no-resolve
+ - GEOIP,telegram,PROXY,no-resolve
+ - GEOIP,CN,DIRECT
+ # 兜底规则：以上规则都不匹配时使用PROXY代理
+ - MATCH,PROXY
