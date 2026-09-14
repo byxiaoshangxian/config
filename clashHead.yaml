@@ -1,71 +1,223 @@
-port: 7890
-socks-port: 7891
+# 基础配置
+mixed-port: 2080
 allow-lan: true
-mode: Rule
+bind-address: "*"
+ipv6: false
+mode: rule
 log-level: info
 tcp-concurrent: true
-external-controller: :9090
-external-ui: ./ui
+experimental:
+  ignore-resolve-fail: true
+
+
+# 配置控制
+external-controller: 0.0.0.0:9090
+external-ui: ui
+external-ui-url: "https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip"
+
+# 数据库匹配模式
 geodata-mode: true
-global-client-fingerprint: chrome
-profile:
-  store-selected: true
+geox-url:
+  geoip: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip-lite.dat"
+  geosite: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat"
+  mmdb: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country-lite.mmdb"
+  asn: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/GeoLite2-ASN.mmdb"
+
+# 流量嗅探
 sniffer:
   enable: true
-  force-dns-mapping: true
-  parse-pure-ip: true
-  force-domain:
-    - "+.netflix.com"
-    - "+.nflxvideo.net"
-    - "+.amazonaws.com"
-    - "+.media.dssott.com"
-  skip-domain:
-    - "+.apple.com"
-    - Mijia Cloud
-    - dlg.io.mi.com
   sniff:
-    TLS:
     HTTP:
-      ports:
-        - 80
-        - 8080-8880
+      ports: [80, 8080-8880]
       override-destination: true
+    TLS:
+      ports: [443, 8443]
+    QUIC:
+      ports: [443, 8443]
+  skip-domain:
+    - "Mijia Cloud"
+    - "+.push.apple.com"
+
+# 虚拟网卡
 tun:
   enable: true
   stack: mixed
   dns-hijack:
     - "any:53"
+    - "tcp://any:53"
   auto-route: true
+  auto-redirect: true
   auto-detect-interface: true
 
+# DNS配置
 dns:
   enable: true
-  listen: :1053
-  ipv6: true
+  ipv6: false
+  listen: 0.0.0.0:53
   enhanced-mode: fake-ip
-  fake-ip-range: 28.0.0.1/8
+  fake-ip-range: 198.18.0.1/16
   fake-ip-filter:
-    - "*"
-    - "+.lan"
-    - "+.local"
+    - "*.lan"
+    - "*.localdomain"
+    - "*.example"
+    - "*.invalid"
+    - "*.localhost"
+    - "*.test"
+    - "*.local"
+    - "*.home.arpa"
+    - "*.direct"
+    - cable.auth.com
+    - network-test.debian.org
+    - detectportal.firefox.com
+    - resolver1.opendns.com
+    - global.turn.twilio.com
+    - global.stun.twilio.com
+    - app.yinxiang.com
+    - injections.adguard.org
+    - localhost.*.weixin.qq.com
+    - "*.blzstatic.cn"
+    - "*.cmpassport.com"
+    - id6.me
+    - open.e.189.cn
+    - opencloud.wostore.cn
+    - id.mail.wo.cn
+    - mdn.open.wo.cn
+    - hmrz.wo.cn
+    - nishub1.10010.com
+    - enrichgw.10010.com
+    - "*.wosms.cn"
+    - "*.jegotrip.com.cn"
+    - "*.icitymobile.mobi"
+    - "*.pingan.com.cn"
+    - "*.cmbchina.com"
+    - "*.10099.com.cn"
+    - "*.microdone.cn"
+    - PDC._msDCS.*.*
+    - DC._msDCS.*.*
+    - GC._msDCS.*.*
+    - time.*.com
+    - time.*.gov
+    - time.*.edu.cn
+    - time.*.apple.com
+    - time-ios.apple.com
+    - time1.*.com
+    - time2.*.com
+    - time3.*.com
+    - time4.*.com
+    - time5.*.com
+    - time6.*.com
+    - time7.*.com
+    - ntp.*.com
+    - ntp1.*.com
+    - ntp2.*.com
+    - ntp3.*.com
+    - ntp4.*.com
+    - ntp5.*.com
+    - ntp6.*.com
+    - ntp7.*.com
+    - "*.time.edu.cn"
+    - "*.ntp.org.cn"
+    - +.pool.ntp.org
+    - time1.cloud.tencent.com
+    - music.163.com
+    - "*.music.163.com"
+    - "*.126.net"
+    - musicapi.taihe.com
+    - music.taihe.com
+    - songsearch.kugou.com
+    - trackercdn.kugou.com
+    - "*.kuwo.cn"
+    - api-jooxtt.sanook.com
+    - api.joox.com
+    - joox.com
+    - y.qq.com
+    - "*.y.qq.com"
+    - streamoc.music.tc.qq.com
+    - mobileoc.music.tc.qq.com
+    - isure.stream.qqmusic.qq.com
+    - dl.stream.qqmusic.qq.com
+    - aqqmusic.tc.qq.com
+    - amobile.music.tc.qq.com
+    - "*.xiami.com"
+    - "*.music.migu.cn"
+    - music.migu.cn
+    - +.msftconnecttest.com
+    - +.msftncsi.com
+    - localhost.ptlogin2.qq.com
+    - localhost.sec.qq.com
+    - +.qq.com
+    - +.tencent.com
+    - +.srv.nintendo.net
+    - "*.n.n.srv.nintendo.net"
+    - +.cdn.nintendo.net
+    - +.stun.playstation.net
+    - xbox.*.*.microsoft.com
+    - "*.*.xboxlive.com"
+    - xbox.*.microsoft.com
+    - xnotify.xboxlive.com
+    - +.battle.net
+    - +.battlenet.com.cn
+    - +.wotgame.cn
+    - +.wggames.cn
+    - +.wowsgame.cn
+    - +.wargaming.net
+    - proxy.golang.org
+    - stun.*.*
+    - stun.*.*.*
+    - +.stun.*.*
+    - +.stun.*.*.*
+    - +.stun.*.*.*.*
+    - +.stun.*.*.*.*.*
+    - heartbeat.belkin.com
+    - "*.linksys.com"
+    - "*.linksyssmartwifi.com"
+    - "*.router.asus.com"
+    - mesu.apple.com
+    - swscan.apple.com
+    - swquery.apple.com
+    - swdownload.apple.com
+    - swcdn.apple.com
+    - swdist.apple.com
+    - lens.l.google.com
+    - stun.l.google.com
+    - na.b.g-tun.com
+    - mtalk.google.com
+    - mtalk4.google.com
+    - mtalk-staging.google.com
+    - mtalk-dev.google.com
+    - alt1-mtalk.google.com
+    - alt1-mtalk.google.com
+    - alt2-mtalk.google.com
+    - alt3-mtalk.google.com
+    - alt4-mtalk.google.com
+    - alt5-mtalk.google.com
+    - alt6-mtalk.google.com
+    - alt7-mtalk.google.com
+    - alt8-mtalk.google.com
+    - android.apis.google.com
+    - device-provisioning.googleapis.com
+    - firebaseinstallations.googleapis.com
+    - +.nflxvideo.net
+    - "*.square-enix.com"
+    - "*.finalfantasyxiv.com"
+    - "*.ffxiv.com"
+    - "*.ff14.sdo.com"
+    - ff.dorado.sdo.com
+    - "*.mcdn.bilivideo.cn"
+    - +.media.dssott.com
+    - shark007.net
+    - Mijia Cloud
+    - +.cmbchina.com
+    - +.cmbimg.com
+    - local.adguard.org
+    - +.sandai.net
+    - +.n0808.com
+    - +.uu.163.com
+    - ps.res.netease.com
+    - +.pub.3gppnetwork.org
   default-nameserver:
-    - 223.5.5.5
     - 119.29.29.29
-    - 114.114.114.114
-    - "[2402:4e00::]"
-    - "[2400:3200::1]"
+    - 223.5.5.5
   nameserver:
-    - "tls://8.8.4.4#dns"
-    - "tls://1.0.0.1#dns"
-    - "tls://[2001:4860:4860::8844]#dns"
-    - "tls://[2606:4700:4700::1001]#dns"
-  proxy-server-nameserver:
     - https://doh.pub/dns-query
-  nameserver-policy:
-    "geosite:cn,private":
-      - https://doh.pub/dns-query
-      - https://dns.alidns.com/dns-query
-
-experimental:
-  ignore-resolve-fail: true
-unified-delay: true
+    - https://dns.alidns.com/dns-query
